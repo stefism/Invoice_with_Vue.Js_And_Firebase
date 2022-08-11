@@ -28,6 +28,8 @@
 </template>
 
 <script>
+import { mapMutations } from 'vuex';
+
 export default {
   // eslint-disable-next-line vue/multi-word-component-names
   name: "Home",
@@ -38,8 +40,10 @@ export default {
     }
   },
   methods: {
+    ...mapMutations(['toggleInvoice']),
+    
     newInvoice() {
-
+      this.toggleInvoice();
     },
     toggleFilterMenu() {
       this.filterMenu = !this.filterMenu;
