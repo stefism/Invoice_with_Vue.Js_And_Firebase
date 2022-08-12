@@ -5,6 +5,7 @@
     ref="invoiceWrap"
   >
     <form @submit.prevent="submitForm" class="invoice-content">
+      <Loading v-show="loading" />
       <h1>Нова фактура</h1>
 
       <!-- Bill from -->
@@ -17,14 +18,14 @@
             required
             type="text"
             id="billerStreetAddress"
-            v-model="billerStreetAddress"
+            v-model="invoice.billerStreetAddress"
           />
         </div>
 
         <div class="location-details flex">
           <div class="input flex flex-column">
             <label for="billerCity">Град</label>
-            <input required type="text" id="billerCity" v-model="billerCity" />
+            <input required type="text" id="billerCity" v-model="invoice.billerCity" />
           </div>
           <div class="input flex flex-column">
             <label for="billerZipCode">Пощенски код</label>
@@ -32,7 +33,7 @@
               required
               type="text"
               id="billerZipCode"
-              v-model="billerZipCode"
+              v-model="invoice.billerZipCode"
             />
           </div>
           <div class="input flex flex-column">
@@ -41,7 +42,7 @@
               required
               type="text"
               id="billerCountry"
-              v-model="billerCountry"
+              v-model="invoice.billerCountry"
             />
           </div>
         </div>
@@ -52,11 +53,11 @@
         <h4>Купувач</h4>
         <div class="input flex flex-column">
           <label for="clientName">Име</label>
-          <input required type="text" id="clientName" v-model="clientName" />
+          <input required type="text" id="clientName" v-model="invoice.clientName" />
         </div>
         <div class="input flex flex-column">
           <label for="clientEmail">И-мейл</label>
-          <input required type="text" id="clientEmail" v-model="clientEmail" />
+          <input required type="text" id="clientEmail" v-model="invoice.clientEmail" />
         </div>
         <div class="input flex flex-column">
           <label for="clientStreetAddress">Адрес</label>
@@ -64,14 +65,14 @@
             required
             type="text"
             id="clientStreetAddress"
-            v-model="clientStreetAddress"
+            v-model="invoice.clientStreetAddress"
           />
         </div>
 
         <div class="location-details flex">
           <div class="input flex flex-column">
             <label for="clientCity">Град</label>
-            <input required type="text" id="clientCity" v-model="clientCity" />
+            <input required type="text" id="clientCity" v-model="invoice.clientCity" />
           </div>
           <div class="input flex flex-column">
             <label for="clientZipCode">Пощенски код</label>
@@ -79,7 +80,7 @@
               required
               type="text"
               id="clientZipCode"
-              v-model="clientZipCode"
+              v-model="invoice.clientZipCode"
             />
           </div>
           <div class="input flex flex-column">
@@ -88,7 +89,7 @@
               required
               type="text"
               id="clientCountry"
-              v-model="clientCountry"
+              v-model="invoice.clientCountry"
             />
           </div>
         </div>
@@ -103,7 +104,7 @@
               disabled
               type="text"
               id="invoiceDate"
-              v-model="invoiceDate"
+              v-model="invoice.invoiceDate"
             />
           </div>
           <div class="input flex flex-column">
@@ -112,13 +113,13 @@
               disabled
               type="text"
               id="paymenyDueDate"
-              v-model="paymentDueDate"
+              v-model="invoice.paymentDueDate"
             />
           </div>
         </div>
         <div class="input flex flex-column">
           <label for="paymentTerms">Срок за плащане</label>
-          <select id="paymentTerms" v-model="paymentTerms">
+          <select id="paymentTerms" v-model="invoice.paymentTerms">
             <option value="5">5 работни дни</option>
             <option value="10">10 работни дни</option>
             <option value="30">30 работни дни</option>
@@ -130,7 +131,7 @@
             required
             type="text"
             id="productDescription"
-            v-model="productDescription"
+            v-model="invoice.productDescription"
           />
         </div>
         <div class="work-items">
@@ -144,7 +145,7 @@
             </tr>
             <tr
               class="table-items flex"
-              v-for="(item, index) in invoiceItemList"
+              v-for="(item, index) in invoice.invoiceItemList"
               :key="index"
             >
               <td class="item-name">
@@ -176,10 +177,18 @@
           <button @click="closeInvoice" class="red">Откажи</button>
         </div>
         <div class="right flex">
-          <button @click="saveDraft" class="dark-purple">
-            Запиши като чернова
+          <button 
+            @click="saveDraft" 
+            class="dark-purple" 
+            :class="{'disabled': this.invoice.invoiceItemList.length == 0}">
+            Запис чернова
           </button>
-          <button @click="publishInvoice" class="purple">Създай фактура</button>
+          <button 
+            @click="publishInvoice" 
+            class="purple" 
+            :class="{'disabled': this.invoice.invoiceItemList.length == 0}">
+            Създай
+          </button>
         </div>
       </div>
     </form>
@@ -188,49 +197,105 @@
 
 <script>
 import { mapMutations } from 'vuex';
+import { uid } from 'uid';
+import db from '../firebase/firebaseInit.js';
+
+import Loading from '../components/Loading.vue';
 
 export default {
   name: "invoiceModal",
+  components: { Loading },
   data() {
     return {
-      billerStreetAddress: "",
-      billerCity: "",
-      billerZipCode: null,
-      billerCountry: "",
-      clientName: "",
-      clientEmail: "",
-      clientStreetAddress: "",
-      clientCity: "",
-      clientZipCode: null,
-      clientCountry: "",
-      invoiceDataUnix: null,
-      invoiceDate: null,
-      paymentTerms: null,
-      paymentDueDateUnix: null,
-      paymentDueDate: null,
-      productDescription: "",
-      invoicePending: null,
-      invoiceDraft: null,
-      invoiceItemList: [],
-      invoiceTotal: 0,
+        loading: null,
+        invoice: {
+            billerStreetAddress: "",
+            billerCity: "",
+            billerZipCode: null,
+            billerCountry: "",
+            clientName: "",
+            clientEmail: "",
+            clientStreetAddress: "",
+            clientCity: "",
+            clientZipCode: null,
+            clientCountry: "",
+            invoiceDataUnix: null,
+            invoiceDate: null,
+            paymentTerms: null,
+            paymentDueDateUnix: null,
+            paymentDueDate: null,
+            productDescription: "",
+            invoicePending: null,
+            invoiceDraft: null,
+            invoiceItemList: [],
+            invoiceTotal: 0
+        }
     };
   },
   created() {
-    this.invoiceDataUnix = Date.now();
-    this.invoiceDate = new Date(this.invoiceDataUnix).toLocaleDateString('bg-bg');
+    this.invoice.invoiceDataUnix = Date.now();
+    this.invoice.invoiceDate = new Date(this.invoice.invoiceDataUnix).toLocaleDateString('bg-bg');
   },
   methods: {
     ...mapMutations(['toggleInvoice']),
     
     closeInvoice() {
         this.toggleInvoice();
+    },
+    addNewInvoiceItem() {
+        this.invoice.invoiceItemList.push({
+            id: uid(),
+            itemName: '',
+            qty: '',
+            price: 0,
+            total: 0
+        });
+    },
+    deleteInvoiceItem(id) {
+        this.invoice.invoiceItemList = this.invoice.invoiceItemList.filter(item => item.id != id);
+    },
+    calculateInvoiceTotal() {
+        this.invoice.invoiceTotal = 0;
+        this.invoice.invoiceItemList.forEach(item => {
+            this.invoice.invoiceTotal += item.total;
+        });
+    },
+    publishInvoice() {
+        this.invoice.invoicePending = true;
+    },
+    saveDraft() {
+        this.invoice.invoiceDraft = true;
+    },
+    submitForm() {
+        this.uploadInvoice();
+    },
+    async uploadInvoice() {
+        this.loading = true;
+
+        this.calculateInvoiceTotal();
+
+        const dataBase = await db.collection('invoices').doc();
+        
+        let newInvoice = {
+            invoiceId: uid(10),
+        };
+
+        for (const key in this.$data.invoice) {
+            newInvoice[key] = this.$data.invoice[key];
+        }
+
+        await dataBase.set(newInvoice);
+
+        this.loading = false;
+
+        this.toggleInvoice();
     }
   },
     watch: {
         paymentTerms() {
             const futureDate = new Date();
-            this.paymentDueDateUnix = futureDate.setDate(futureDate.getDate() + parseInt(this.paymentTerms));
-            this.paymentDueDate = new Date(this.paymentDueDateUnix).toLocaleDateString('bg-bg');
+            this.invoice.paymentDueDateUnix = futureDate.setDate(futureDate.getDate() + parseInt(this.invoice.paymentTerms));
+            this.invoice.paymentDueDate = new Date(this.invoice.paymentDueDateUnix).toLocaleDateString('bg-bg');
         }
     }
 };
@@ -250,6 +315,12 @@ export default {
   }
   @media (min-width: 900px) {
     left: 90px;
+  }
+
+  .disabled {
+    background-color: #a9b2ca;
+    cursor: none;
+    pointer-events: none;
   }
 
   .invoice-content {
