@@ -19,7 +19,7 @@ export default createStore({
     async getInvoices({ commit, state }) {
       const getData = db.collection("invoices");
       const results = await getData.get();
-      results.forEach((doc) => {});
+      results.forEach((doc) => {}); //
     },
   },
   modules: {},
