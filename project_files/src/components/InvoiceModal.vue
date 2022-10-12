@@ -25,7 +25,12 @@
         <div class="location-details flex">
           <div class="input flex flex-column">
             <label for="billerCity">Град</label>
-            <input required type="text" id="billerCity" v-model="invoice.billerCity" />
+            <input
+              required
+              type="text"
+              id="billerCity"
+              v-model="invoice.billerCity"
+            />
           </div>
           <div class="input flex flex-column">
             <label for="billerZipCode">Пощенски код</label>
@@ -53,11 +58,21 @@
         <h4>Купувач</h4>
         <div class="input flex flex-column">
           <label for="clientName">Име</label>
-          <input required type="text" id="clientName" v-model="invoice.clientName" />
+          <input
+            required
+            type="text"
+            id="clientName"
+            v-model="invoice.clientName"
+          />
         </div>
         <div class="input flex flex-column">
           <label for="clientEmail">И-мейл</label>
-          <input required type="text" id="clientEmail" v-model="invoice.clientEmail" />
+          <input
+            required
+            type="text"
+            id="clientEmail"
+            v-model="invoice.clientEmail"
+          />
         </div>
         <div class="input flex flex-column">
           <label for="clientStreetAddress">Адрес</label>
@@ -72,7 +87,12 @@
         <div class="location-details flex">
           <div class="input flex flex-column">
             <label for="clientCity">Град</label>
-            <input required type="text" id="clientCity" v-model="invoice.clientCity" />
+            <input
+              required
+              type="text"
+              id="clientCity"
+              v-model="invoice.clientCity"
+            />
           </div>
           <div class="input flex flex-column">
             <label for="clientZipCode">Пощенски код</label>
@@ -174,19 +194,25 @@
       <!-- Save and Exit -->
       <div class="save flex">
         <div class="left">
-          <button @click="closeInvoice" class="red">Откажи</button>
+          <button type="button" @click="closeInvoice" class="red">
+            Откажи
+          </button>
         </div>
         <div class="right flex">
-          <button 
-            @click="saveDraft" 
-            class="dark-purple" 
-            :class="{'disabled': this.invoice.invoiceItemList.length == 0}">
+          <button
+            type="submit"
+            @click="saveDraft"
+            class="dark-purple"
+            :class="{ disabled: this.invoice.invoiceItemList.length == 0 }"
+          >
             Запис чернова
           </button>
-          <button 
-            @click="publishInvoice" 
-            class="purple" 
-            :class="{'disabled': this.invoice.invoiceItemList.length == 0}">
+          <button
+            type="submit"
+            @click="publishInvoice"
+            class="purple"
+            :class="{ disabled: this.invoice.invoiceItemList.length == 0 }"
+          >
             Създай
           </button>
         </div>
@@ -196,108 +222,120 @@
 </template>
 
 <script>
-import { mapMutations } from 'vuex';
-import { uid } from 'uid';
-import db from '../firebase/firebaseInit.js';
+import { mapMutations } from "vuex";
+import { uid } from "uid";
+import db from "../firebase/firebaseInit.js";
 
-import Loading from '../components/Loading.vue';
+import Loading from "../components/Loading.vue";
 
 export default {
   name: "invoiceModal",
   components: { Loading },
   data() {
     return {
-        loading: null,
-        invoice: {
-            billerStreetAddress: "",
-            billerCity: "",
-            billerZipCode: null,
-            billerCountry: "",
-            clientName: "",
-            clientEmail: "",
-            clientStreetAddress: "",
-            clientCity: "",
-            clientZipCode: null,
-            clientCountry: "",
-            invoiceDataUnix: null,
-            invoiceDate: null,
-            paymentTerms: null,
-            paymentDueDateUnix: null,
-            paymentDueDate: null,
-            productDescription: "",
-            invoicePending: null,
-            invoiceDraft: null,
-            invoiceItemList: [],
-            invoiceTotal: 0
-        }
+      loading: null,
+      invoice: {
+        billerStreetAddress: "",
+        billerCity: "",
+        billerZipCode: null,
+        billerCountry: "",
+        clientName: "",
+        clientEmail: "",
+        clientStreetAddress: "",
+        clientCity: "",
+        clientZipCode: null,
+        clientCountry: "",
+        invoiceDataUnix: null,
+        invoiceDate: null,
+        paymentTerms: null,
+        paymentDueDateUnix: null,
+        paymentDueDate: null,
+        productDescription: "",
+        invoicePending: null,
+        invoiceDraft: null,
+        invoiceItemList: [],
+        invoiceTotal: 0,
+      },
     };
   },
   created() {
     this.invoice.invoiceDataUnix = Date.now();
-    this.invoice.invoiceDate = new Date(this.invoice.invoiceDataUnix).toLocaleDateString('bg-bg');
+    this.invoice.invoiceDate = new Date(
+      this.invoice.invoiceDataUnix
+    ).toLocaleDateString("bg-bg");
   },
   methods: {
-    ...mapMutations(['toggleInvoice']),
-    
+    ...mapMutations(['toggleInvoice', 'toggleModal']),
+    checkClick(event) {
+        if(event.target == this.$refs.invoiceWrap) {
+            this.toggleModal();
+        }
+    },
     closeInvoice() {
-        this.toggleInvoice();
+      this.toggleInvoice();
     },
     addNewInvoiceItem() {
-        this.invoice.invoiceItemList.push({
-            id: uid(),
-            itemName: '',
-            qty: '',
-            price: 0,
-            total: 0
-        });
+      this.invoice.invoiceItemList.push({
+        id: uid(),
+        itemName: "",
+        qty: "",
+        price: 0,
+        total: 0,
+      });
     },
     deleteInvoiceItem(id) {
-        this.invoice.invoiceItemList = this.invoice.invoiceItemList.filter(item => item.id != id);
+      this.invoice.invoiceItemList = this.invoice.invoiceItemList.filter(
+        (item) => item.id != id
+      );
     },
     calculateInvoiceTotal() {
-        this.invoice.invoiceTotal = 0;
-        this.invoice.invoiceItemList.forEach(item => {
-            this.invoice.invoiceTotal += item.total;
-        });
+      this.invoice.invoiceTotal = 0;
+      this.invoice.invoiceItemList.forEach((item) => {
+        this.invoice.invoiceTotal += item.total;
+      });
     },
     publishInvoice() {
-        this.invoice.invoicePending = true;
+      this.invoice.invoicePending = true;
     },
     saveDraft() {
-        this.invoice.invoiceDraft = true;
+      this.invoice.invoiceDraft = true;
     },
     submitForm() {
-        this.uploadInvoice();
+      this.uploadInvoice();
     },
     async uploadInvoice() {
-        this.loading = true;
+      this.loading = true;
 
-        this.calculateInvoiceTotal();
+      this.calculateInvoiceTotal();
 
-        const dataBase = await db.collection('invoices').doc();
-        
-        let newInvoice = {
-            invoiceId: uid(10),
-        };
+      const dataBase = await db.collection("invoices").doc();
 
-        for (const key in this.$data.invoice) {
-            newInvoice[key] = this.$data.invoice[key];
-        }
+      let newInvoice = {
+        invoiceId: uid(10),
+      };
 
-        await dataBase.set(newInvoice);
+      for (const key in this.$data.invoice) {
+        newInvoice[key] = this.$data.invoice[key];
+      }
 
-        this.loading = false;
+      await dataBase.set(newInvoice);
 
-        this.toggleInvoice();
-    }
+      this.loading = false;
+
+      this.toggleInvoice();
+    },
   },
-    watch: {
-        paymentTerms() {
-            const futureDate = new Date();
-            this.invoice.paymentDueDateUnix = futureDate.setDate(futureDate.getDate() + parseInt(this.invoice.paymentTerms));
-            this.invoice.paymentDueDate = new Date(this.invoice.paymentDueDateUnix).toLocaleDateString('bg-bg');
-        }
-    }
+  watch: {
+    paymentTerms() {
+      const futureDate = new Date();
+      this.invoice.paymentDueDateUnix = futureDate.setDate(
+        futureDate.getDate() + parseInt(this.invoice.paymentTerms)
+      );
+      this.invoice.paymentDueDate = new Date(
+        this.invoice.paymentDueDateUnix
+      ).toLocaleDateString("bg-bg");
+    },
+  },
 };
 </script>
 
@@ -401,7 +439,7 @@ export default {
             margin-bottom: 16px;
 
             th {
-                text-align: left;
+              text-align: left;
             }
           }
 
@@ -420,29 +458,29 @@ export default {
         }
 
         .button {
-            color: #fff;
-            background-color: #252945;
-            align-items: center;
-            justify-content: center;
-            width: 100%;
+          color: #fff;
+          background-color: #252945;
+          align-items: center;
+          justify-content: center;
+          width: 100%;
 
-            img {
-                margin-right: 4px;
-            }
+          img {
+            margin-right: 4px;
+          }
         }
       }
     }
 
     .save {
-        margin-top: 60px;
+      margin-top: 60px;
 
-        div {
-            flex: 1
-        }
+      div {
+        flex: 1;
+      }
 
-        .right {
-            justify-content: flex-end;
-        }
+      .right {
+        justify-content: flex-end;
+      }
     }
   }
 
