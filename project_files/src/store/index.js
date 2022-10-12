@@ -1,9 +1,11 @@
-import { createStore } from 'vuex'
+import { createStore } from "vuex";
+import db from "../firebase/firebaseInit";
 
 export default createStore({
   state: {
+    invoiceData: [],
     invoiceModal: null,
-    modalActive: null
+    modalActive: null,
   },
   mutations: {
     toggleInvoice(state) {
@@ -11,10 +13,14 @@ export default createStore({
     },
     toggleModal(state) {
       state.modalActive = !state.modalActive;
-    }
+    },
   },
   actions: {
+    async getInvoices({ commit, state }) {
+      const getData = db.collection("invoices");
+      const results = await getData.get();
+      results.forEach((doc) => {});
+    },
   },
-  modules: {
-  }
-})
+  modules: {},
+});
