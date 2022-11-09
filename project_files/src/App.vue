@@ -1,12 +1,12 @@
 <template>
-  <div>
+  <div v-if="invoicesLoaded">
     <div v-if="!mobile" class="app flex flex-column">
       <Navigation />
       <div class="app-content flex flex-column">
         <Modal v-if="modalActive" />
         <transition name="invoice">
           <InvoiceModal v-if="invoiceModal" />
-        </transition>    
+        </transition>
         <router-view />
       </div>
     </div>
@@ -18,36 +18,38 @@
 </template>
 
 <script>
-import { mapState } from 'vuex';
+import { mapState, mapActions } from "vuex";
 
-import Navigation from './components/Navigation.vue';
-import InvoiceModal from './components/InvoiceModal.vue';
-import Modal from './components/Modal.vue';
+import Navigation from "./components/Navigation.vue";
+import InvoiceModal from "./components/InvoiceModal.vue";
+import Modal from "./components/Modal.vue";
 
-  export default {
-    data() {
-      return {
-        mobile: false
+export default {
+  data() {
+    return {
+      mobile: false,
+    };
+  },
+  components: { Navigation, InvoiceModal, Modal },
+  created() {
+    this.getInvoices();
+    this.checkScreen();
+    window.addEventListener("resize", this.checkScreen);
+  },
+  methods: {
+    ...mapActions(["getInvoices"]),
+    checkScreen() {
+      if (window.innerWidth <= 750) {
+        this.mobile = true;
+      } else {
+        this.mobile = false;
       }
     },
-    components: { Navigation, InvoiceModal, Modal },
-    created() {
-      this.checkScreen();
-      window.addEventListener('resize', this.checkScreen);
-    },
-    methods: {
-      checkScreen() {
-        if(window.innerWidth <= 750) {
-          this.mobile = true;
-        } else {
-          this.mobile = false;
-        }
-      }
-    },
-    computed: {
-      ...mapState(['invoiceModal', 'modalActive'])
-    }
-  }
+  },
+  computed: {
+    ...mapState(["invoiceModal", "modalActive", "invoicesLoaded"]),
+  },
+};
 </script>
 
 <style lang="scss">
@@ -57,7 +59,7 @@ import Modal from './components/Modal.vue';
   margin: 0;
   padding: 0;
   box-sizing: border-box;
-  font-family: "Poppins", sans-serif; 
+  font-family: "Poppins", sans-serif;
 }
 
 .app {
@@ -69,7 +71,7 @@ import Modal from './components/Modal.vue';
 
   .app-content {
     padding: 0 20px;
-    flex:  1;
+    flex: 1;
     position: relative;
   }
 }

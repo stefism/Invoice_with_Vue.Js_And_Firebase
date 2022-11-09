@@ -8,7 +8,7 @@
       <div class="right flex">
         <div @click="toggleFilterMenu" class="filter flex">
           <span>Филтър по статус</span>
-          <img src="../assets/icon-arrow-down.svg" alt="arrow icon">
+          <img src="../assets/icon-arrow-down.svg" alt="arrow icon" />
           <ul v-show="filterMenu" class="filter-menu">
             <li>Чернови</li>
             <li>Очакващи плащане</li>
@@ -18,37 +18,53 @@
         </div>
         <div @click="newInvoice" class="button flex">
           <div class="inner-button flex">
-            <img src="../assets/icon-plus.svg" alt="plus icon">
+            <img src="../assets/icon-plus.svg" alt="plus icon" />
           </div>
           <span>Нова фактура</span>
         </div>
       </div>
     </div>
+    <div v-if="invoiceData.length > 0">
+      <Invoice
+        v-for="(invoice, index) in invoiceData"
+        :invoice="invoice"
+        :key="index"
+      />
+    </div>
+    <div v-else class="empty flex flex-column">
+      <img src="@/assets/illustration-empty.svg" alt="" />
+      <h3>В момента няма налични фактури.</h3>
+      <p>Създайте нова фактура като кликнете върху бутона "Нова фактура".</p>
+    </div>
   </div>
 </template>
 
 <script>
-import { mapMutations } from 'vuex';
+import Invoice from "../components/Invoice.vue";
+import { mapMutations, mapState } from "vuex";
 
 export default {
   // eslint-disable-next-line vue/multi-word-component-names
   name: "Home",
-  components: {},
+  components: { Invoice },
   data() {
     return {
-      filterMenu: false
-    }
+      filterMenu: false,
+    };
   },
   methods: {
-    ...mapMutations(['toggleInvoice']),
-    
+    ...mapMutations(["toggleInvoice"]),
+
     newInvoice() {
       this.toggleInvoice();
     },
     toggleFilterMenu() {
       this.filterMenu = !this.filterMenu;
-    }
-  }
+    },
+  },
+  computed: {
+    ...mapState(["invoiceData"]),
+  },
 };
 </script>
 
@@ -94,7 +110,8 @@ export default {
           top: 25px;
           list-style: none;
           background-color: #1e2139;
-          box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+          box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1),
+            0 2px 4px -1px rgba(0, 0, 0, 0.06);
 
           li {
             cursor: pointer;
@@ -128,6 +145,29 @@ export default {
           }
         }
       }
+    }
+  }
+
+  .empty {
+    margin-top: 160px;
+    align-items: center;
+
+    img {
+      width: 214px;
+      height: 200px;
+    }
+
+    h3 {
+      font-size: 20px;
+      margin-top: 40px;
+    }
+
+    p {
+      text-align: center;
+      max-width: 224px;
+      font-size: 12px;
+      font-weight: 300;
+      margin-top: 16px;
     }
   }
 }
