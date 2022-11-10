@@ -2,32 +2,40 @@
 <template>
   <div class="modal flex">
     <div class="modal-content">
-        <p>Сигурни ли сте, че искате да излезете? Промените няма да бъдат запазени.</p>
-        <div class="actions flex">
-            <button @click="closeModal" class="purple">Отказ</button>
-            <button @click="closeInvoice" class="red">Изход</button>
-        </div>
+      <p>
+        Сигурни ли сте, че искате да излезете? Промените няма да бъдат запазени.
+      </p>
+      <div class="actions flex">
+        <button @click="closeModal" class="purple">Отказ</button>
+        <button @click="closeInvoice" class="red">Изход</button>
+      </div>
     </div>
   </div>
 </template>
 
 <script>
-import { mapMutations } from 'vuex';
+import { mapMutations, mapState } from "vuex";
 
 export default {
-    // eslint-disable-next-line vue/multi-word-component-names
-    name: 'modal',
-    methods: {
-        ...mapMutations(['toggleModal', 'toggleInvoice']),
-        closeModal() {
-            this.toggleModal();
-        },
-        closeInvoice() {
-            this.toggleModal();
-            this.toggleInvoice();
-        }
-    }
-}
+  // eslint-disable-next-line vue/multi-word-component-names
+  name: "modal",
+  methods: {
+    ...mapMutations(["toggleModal", "toggleInvoice", "toggleEditInvoice"]),
+    closeModal() {
+      this.toggleModal();
+    },
+    closeInvoice() {
+      this.toggleModal();
+      this.toggleInvoice();
+      if (this.editInvoice) {
+        this.toggleEditInvoice();
+      }
+    },
+  },
+  computed: {
+    ...mapState(["editInvoice"]),
+  },
+};
 </script>
 
 <style lang="scss" scoped>

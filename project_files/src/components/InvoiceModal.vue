@@ -6,7 +6,8 @@
   >
     <form @submit.prevent="submitForm" class="invoice-content">
       <Loading v-show="loading" />
-      <h1>Нова фактура</h1>
+      <h1 v-if="!editInvoice">Нова фактура</h1>
+      <h1 v-else>Редактиране на фактура</h1>
 
       <!-- Bill from -->
       <div class="bill-from flex flex-column">
@@ -200,6 +201,7 @@
         </div>
         <div class="right flex">
           <button
+            v-if="!editInvoice"
             type="submit"
             @click="saveDraft"
             class="dark-purple"
@@ -208,12 +210,16 @@
             Запис чернова
           </button>
           <button
+            v-if="!editInvoice"
             type="submit"
             @click="publishInvoice"
             class="purple"
             :class="{ disabled: this.invoice.invoiceItemList.length == 0 }"
           >
             Създай
+          </button>
+          <button v-if="editInvoice" type="submit" class="purple">
+            Редакция
           </button>
         </div>
       </div>
@@ -222,7 +228,7 @@
 </template>
 
 <script>
-import { mapMutations } from "vuex";
+import { mapMutations, mapState } from "vuex";
 import { uid } from "uid";
 import db from "../firebase/firebaseInit.js";
 
@@ -259,20 +265,31 @@ export default {
     };
   },
   created() {
-    this.invoice.invoiceDataUnix = Date.now();
-    this.invoice.invoiceDate = new Date(
-      this.invoice.invoiceDataUnix
-    ).toLocaleDateString("bg-bg");
+    if (!this.editInvoice) {
+      this.invoice.invoiceDataUnix = Date.now();
+      this.invoice.invoiceDate = new Date(
+        this.invoice.invoiceDataUnix
+      ).toLocaleDateString("bg-bg");
+    }
+
+    if (this.editInvoice) {
+      for (const key in this.currentInvoice) {
+        this.invoice[key] = this.currentInvoice[key];
+      }
+    }
   },
   methods: {
-    ...mapMutations(['toggleInvoice', 'toggleModal']),
+    ...mapMutations(["toggleInvoice", "toggleModal", "toggleEditInvoice"]),
     checkClick(event) {
-        if(event.target == this.$refs.invoiceWrap) {
-            this.toggleModal();
-        }
+      if (event.target == this.$refs.invoiceWrap) {
+        this.toggleModal();
+      }
     },
     closeInvoice() {
       this.toggleInvoice();
+      if (this.editInvoice) {
+        this.toggleEditInvoice();
+      }
     },
     addNewInvoiceItem() {
       this.invoice.invoiceItemList.push({
@@ -324,6 +341,9 @@ export default {
 
       this.toggleInvoice();
     },
+  },
+  computed: {
+    ...mapState(["editInvoice", "currentInvoice"]),
   },
   watch: {
     paymentTerms() {

@@ -20,7 +20,7 @@
         </div>
       </div>
       <div class="right flex">
-        <button @click="editInvoice(currentInvoice.docId)" class="dark-purple">
+        <button @click="toggleEditInvoice_" class="dark-purple">
           Редакция
         </button>
         <button @click="deleteInvoice(currentInvoice.docId)" class="red">
@@ -92,7 +92,7 @@
             <p>{{ item.total }}</p>
           </div>
         </div>
-        <div class="totl flex">
+        <div class="total flex">
           <p>Обща сума</p>
           <p>{{ currentInvoice.invoiceTotal }}</p>
         </div>
@@ -112,7 +112,15 @@ export default {
     this.setCurrentInvoice(this.$route.params.invoiceId);
   },
   methods: {
-    ...mapMutations(["setCurrentInvoice"]),
+    ...mapMutations([
+      "setCurrentInvoice",
+      "toggleEditInvoice",
+      "toggleInvoice",
+    ]),
+    toggleEditInvoice_() {
+      this.toggleEditInvoice();
+      this.toggleInvoice();
+    },
   },
   computed: {
     ...mapState(["currentInvoice"]),
@@ -254,7 +262,7 @@ export default {
       .billing-items {
         padding: 32px;
         border-radius: 20px 0px 0 0;
-        background-color: #251945;
+        background-color: #252945;
 
         .heading {
           color: #dfe3fa;
