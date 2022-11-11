@@ -1,5 +1,5 @@
 <template>
-  <div v-if="currentInvoice" class="invoice-view container">
+  <div v-if="currentInvoice_" class="invoice-view container">
     <router-link class="nav-link flex" :to="{ name: 'Home' }">
       <img src="@/assets/icon-arrow-left.svg" alt="" /> Назад
     </router-link>
@@ -9,33 +9,33 @@
         <div
           class="status-button flex"
           :class="{
-            paid: currentInvoice.invoicePaid,
-            draft: currentInvoice.invoiceDraft,
-            pending: currentInvoice.invoicePending,
+            paid: currentInvoice_.invoicePaid,
+            draft: currentInvoice_.invoiceDraft,
+            pending: currentInvoice_.invoicePending,
           }"
         >
-          <span v-if="currentInvoice.invoicePaid">Платена</span>
-          <span v-if="currentInvoice.invoiceDraft">Чернова</span>
-          <span v-if="currentInvoice.invoicePending">Чакаща</span>
+          <span v-if="currentInvoice_.invoicePaid">Платена</span>
+          <span v-if="currentInvoice_.invoiceDraft">Чернова</span>
+          <span v-if="currentInvoice_.invoicePending">Чакаща</span>
         </div>
       </div>
       <div class="right flex">
         <button @click="toggleEditInvoice_" class="dark-purple">
           Редакция
         </button>
-        <button @click="deleteInvoice(currentInvoice.docId)" class="red">
+        <button @click="deleteInvoice(currentInvoice_.docId)" class="red">
           Премахване
         </button>
         <button
-          v-if="currentInvoice.invoicePending"
-          @click="updateStatusToPaid(currentInvoice.docId)"
+          v-if="currentInvoice_.invoicePending"
+          @click="updateStatusToPaid(currentInvoice_.docId)"
           class="green"
         >
           Маркирай като платена
         </button>
         <button
-          v-if="currentInvoice.invoiceDraft || currentInvoice.invoicePaid"
-          @click="updateStatusToPending(currentInvoice.docId)"
+          v-if="currentInvoice_.invoiceDraft || currentInvoice_.invoicePaid"
+          @click="updateStatusToPending(currentInvoice_.docId)"
           class="orange"
         >
           Маркирай като чакаща
@@ -45,34 +45,34 @@
     <div class="invoice-details flex flex-column">
       <div class="top flex">
         <div class="left flex flex-column">
-          <p><span>#</span>{{ currentInvoice.invoiceId }}</p>
-          <p>{{ currentInvoice.productDescription }}</p>
+          <p><span>#</span>{{ currentInvoice_.invoiceId }}</p>
+          <p>{{ currentInvoice_.productDescription }}</p>
         </div>
         <div class="right flex flex-column">
-          <p>{{ currentInvoice.billerStreetAddress }}</p>
-          <p>{{ currentInvoice.billerCity }}</p>
-          <p>{{ currentInvoice.billerZipCode }}</p>
-          <p>{{ currentInvoice.billerCountry }}</p>
+          <p>{{ currentInvoice_.billerStreetAddress }}</p>
+          <p>{{ currentInvoice_.billerCity }}</p>
+          <p>{{ currentInvoice_.billerZipCode }}</p>
+          <p>{{ currentInvoice_.billerCountry }}</p>
         </div>
       </div>
       <div class="middle flex">
         <div class="payment flex flex-column">
           <h4>Дата на издаване</h4>
-          <p>{{ currentInvoice.invoiceDate }}</p>
+          <p>{{ currentInvoice_.invoiceDate }}</p>
           <h4>Дата на плащане</h4>
-          <p>{{ currentInvoice.paymentDueDate }}</p>
+          <p>{{ currentInvoice_.paymentDueDate }}</p>
         </div>
         <div class="bill flex flex-column">
           <h4>Купувач</h4>
-          <p>{{ currentInvoice.clientName }}</p>
-          <p>{{ currentInvoice.clientStreetAddress }}</p>
-          <p>{{ currentInvoice.clientCity }}</p>
-          <p>{{ currentInvoice.clientZipCode }}</p>
-          <p>{{ currentInvoice.clientCountry }}</p>
+          <p>{{ currentInvoice_.clientName }}</p>
+          <p>{{ currentInvoice_.clientStreetAddress }}</p>
+          <p>{{ currentInvoice_.clientCity }}</p>
+          <p>{{ currentInvoice_.clientZipCode }}</p>
+          <p>{{ currentInvoice_.clientCountry }}</p>
         </div>
         <div class="send-to flex flex-column">
           <h4>Изпрати до</h4>
-          <p>{{ currentInvoice.clientEmail }}</p>
+          <p>{{ currentInvoice_.clientEmail }}</p>
         </div>
       </div>
       <div class="bottom flex flex-column">
@@ -84,7 +84,7 @@
             <p>Общо</p>
           </div>
           <div
-            v-for="(item, index) in currentInvoice.invoiceItemList"
+            v-for="(item, index) in currentInvoice_.invoiceItemList"
             :key="index"
             class="item flex"
           >
@@ -96,7 +96,7 @@
         </div>
         <div class="total flex">
           <p>Обща сума</p>
-          <p>{{ currentInvoice.invoiceTotal }}</p>
+          <p>{{ currentInvoice_.invoiceTotal }}</p>
         </div>
       </div>
     </div>
@@ -108,10 +108,13 @@ import { mapActions, mapMutations, mapState } from "vuex";
 export default {
   name: "invoiceView",
   data() {
-    return {};
+    return {
+      currentInvoice_: null,
+    };
   },
   created() {
     this.setCurrentInvoice(this.$route.params.invoiceId);
+    this.currentInvoice_ = this.currentInvoice;
   },
   methods: {
     ...mapMutations([

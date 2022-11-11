@@ -19,7 +19,6 @@ export default createStore({
     },
     setInvoiceData(state, payload) {
       state.invoiceData.push(payload);
-      console.log(state.invoiceData);
     },
     invoicesLoaded(state) {
       state.invoicesLoaded = true;
@@ -41,7 +40,7 @@ export default createStore({
 
       if (invoice) {
         invoice.invoicePaid = true;
-        invoice.invoivePending = false;
+        invoice.invoicePending = false;
       }
     },
     updateStatusToPending(state, payload) {
@@ -50,7 +49,7 @@ export default createStore({
       if (invoice) {
         invoice.invoicePaid = false;
         invoice.invoiceDraft = false;
-        invoice.invoivePending = true;
+        invoice.invoicePending = true;
       }
     },
   },
@@ -117,8 +116,8 @@ export default createStore({
       const invoice = db.collection("invoices").doc(docId);
       await invoice.update({
         invoicePaid: false,
-        invoiceDraft: false,
         invoicePending: true,
+        invoiceDraft: false,
       });
       commit("updateStatusToPending", docId);
     },

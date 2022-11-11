@@ -342,6 +342,8 @@ export default {
         newInvoice[key] = this.$data.invoice[key];
       }
 
+      console.log(newInvoice);
+
       await dataBase.set(newInvoice);
 
       this.loading = false;
@@ -390,7 +392,7 @@ export default {
     ...mapState(["editInvoice", "currentInvoice"]),
   },
   watch: {
-    paymentTerms() {
+    "invoice.paymentTerms"() {
       const futureDate = new Date();
       this.invoice.paymentDueDateUnix = futureDate.setDate(
         futureDate.getDate() + parseInt(this.invoice.paymentTerms)
