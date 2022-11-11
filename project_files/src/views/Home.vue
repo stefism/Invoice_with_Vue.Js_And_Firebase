@@ -3,17 +3,20 @@
     <div class="header flex">
       <div class="left flex flex-column">
         <h1>Фактури</h1>
-        <span>Имате общо 4 фактури</span>
+        <span>Имате общо {{ filteredData.length }} фактури</span>
       </div>
       <div class="right flex">
         <div @click="toggleFilterMenu" class="filter flex">
-          <span>Филтър по статус</span>
+          <span
+            >Филтър по статус
+            <span v-if="filteredInvoice">: {{ filteredInvoice }}</span>
+          </span>
           <img src="../assets/icon-arrow-down.svg" alt="arrow icon" />
           <ul v-show="filterMenu" class="filter-menu">
-            <li>Чернови</li>
-            <li>Очакващи плащане</li>
-            <li>Платени</li>
-            <li>Изчисти филтъра</li>
+            <li @click="filteredInvoices">Чернови</li>
+            <li @click="filteredInvoices">Очакващи плащане</li>
+            <li @click="filteredInvoices">Платени</li>
+            <li @click="filteredInvoices">Изчисти филтъра</li>
           </ul>
         </div>
         <div @click="newInvoice" class="button flex">
@@ -26,7 +29,7 @@
     </div>
     <div v-if="invoiceData.length > 0">
       <Invoice
-        v-for="(invoice, index) in invoiceData"
+        v-for="(invoice, index) in filteredData"
         :invoice="invoice"
         :key="index"
       />
@@ -50,6 +53,7 @@ export default {
   data() {
     return {
       filterMenu: false,
+      filteredInvoice: null,
     };
   },
   methods: {
@@ -61,9 +65,30 @@ export default {
     toggleFilterMenu() {
       this.filterMenu = !this.filterMenu;
     },
+    filteredInvoices(e) {
+      if (e.target.innerText == "Изчисти филтъра") {
+        this.filteredInvoice = null;
+      } else {
+        this.filteredInvoice = e.target.innerText;
+      }
+    },
   },
   computed: {
     ...mapState(["invoiceData"]),
+    filteredData() {
+      return this.invoiceData.filter((i) => {
+        if (this.filteredInvoice == "Чернови") {
+          return i.invoiceDraft == true;
+        }
+        if (this.filteredInvoice == "Очакващи плащане") {
+          return i.invoicePending == true;
+        }
+        if (this.filteredInvoice == "Платени") {
+          return i.invoicePaid == true;
+        }
+        return i;
+      });
+    },
   },
 };
 </script>

@@ -20,9 +20,9 @@
             pending: invoice.invoicePending,
           }"
         >
-          <span v-if="invoice.invoicePaid">Paid</span>
-          <span v-if="invoice.invoiceDraft">Draft</span>
-          <span v-if="invoice.invoicePending">Pending</span>
+          <span v-if="invoice.invoicePaid">Платена</span>
+          <span v-if="invoice.invoiceDraft">Чернова</span>
+          <span v-if="invoice.invoicePending">Чакаща</span>
         </div>
         <div class="icon">
           <img src="@/assets/icon-arrow-right.svg" alt="" />

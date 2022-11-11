@@ -14,9 +14,9 @@
             pending: currentInvoice.invoicePending,
           }"
         >
-          <span v-if="currentInvoice.invoicePaid">Paid</span>
-          <span v-if="currentInvoice.invoiceDraft">Draft</span>
-          <span v-if="currentInvoice.invoicePending">Pending</span>
+          <span v-if="currentInvoice.invoicePaid">Платена</span>
+          <span v-if="currentInvoice.invoiceDraft">Чернова</span>
+          <span v-if="currentInvoice.invoicePending">Чакаща</span>
         </div>
       </div>
       <div class="right flex">
@@ -35,9 +35,11 @@
         </button>
         <button
           v-if="currentInvoice.invoiceDraft || currentInvoice.invoicePaid"
-          @click="updateStatusToPending"
+          @click="updateStatusToPending(currentInvoice.docId)"
           class="orange"
-        ></button>
+        >
+          Маркирай като чакаща
+        </button>
       </div>
     </div>
     <div class="invoice-details flex flex-column">
@@ -102,7 +104,7 @@
 </template>
 
 <script>
-import { mapMutations, mapState } from "vuex";
+import { mapActions, mapMutations, mapState } from "vuex";
 export default {
   name: "invoiceView",
   data() {
@@ -117,9 +119,24 @@ export default {
       "toggleEditInvoice",
       "toggleInvoice",
     ]),
+    ...mapActions([
+      "deleteInvoiceFromDb",
+      "updateStatusToPendingToDb",
+      "updateStatusToPaidToDb",
+    ]),
     toggleEditInvoice_() {
       this.toggleEditInvoice();
       this.toggleInvoice();
+    },
+    async deleteInvoice(docId) {
+      await this.deleteInvoiceFromDb(docId);
+      this.$router.push({ name: "Home" });
+    },
+    updateStatusToPaid(docId) {
+      this.updateStatusToPaidToDb(docId);
+    },
+    updateStatusToPending(docId) {
+      this.updateStatusToPendingToDb(docId);
     },
   },
   computed: {

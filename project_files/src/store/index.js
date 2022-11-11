@@ -32,6 +32,27 @@ export default createStore({
     toggleEditInvoice(state) {
       state.editInvoice = !state.editInvoice;
     },
+    deleteInvoice(state, payload) {
+      //payload = current Invoice Id
+      state.invoiceData = state.invoiceData.filter((i) => i.docId != payload);
+    },
+    updateStatusToPaid(state, payload) {
+      const invoice = state.invoiceData.find((i) => i.docId == payload);
+
+      if (invoice) {
+        invoice.invoicePaid = true;
+        invoice.invoivePending = false;
+      }
+    },
+    updateStatusToPending(state, payload) {
+      const invoice = state.invoiceData.find((i) => i.docId == payload);
+
+      if (invoice) {
+        invoice.invoicePaid = false;
+        invoice.invoiceDraft = false;
+        invoice.invoivePending = true;
+      }
+    },
   },
   actions: {
     async getInvoices({ commit, state }) {
@@ -71,6 +92,35 @@ export default createStore({
       });
 
       commit("invoicesLoaded");
+    },
+    async updateInvoice({ commit, dispatch }, { docId, routeId }) {
+      commit("deleteInvoice", docId);
+      await dispatch("getInvoices");
+      commit("toggleInvoice");
+      commit("toggleEditInvoice");
+      commit("setCurrentInvoice", routeId);
+    },
+    async deleteInvoiceFromDb({ commit }, docId) {
+      const invoice = db.collection("invoices").doc(docId);
+      await invoice.delete();
+      commit("deleteInvoice", docId);
+    },
+    async updateStatusToPaidToDb({ commit }, docId) {
+      const invoice = db.collection("invoices").doc(docId);
+      await invoice.update({
+        invoicePaid: true,
+        invoicePending: false,
+      });
+      commit("updateStatusToPaid", docId);
+    },
+    async updateStatusToPendingToDb({ commit }, docId) {
+      const invoice = db.collection("invoices").doc(docId);
+      await invoice.update({
+        invoicePaid: false,
+        invoiceDraft: false,
+        invoicePending: true,
+      });
+      commit("updateStatusToPending", docId);
     },
   },
   modules: {},

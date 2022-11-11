@@ -228,7 +228,7 @@
 </template>
 
 <script>
-import { mapMutations, mapState } from "vuex";
+import { mapActions, mapMutations, mapState } from "vuex";
 import { uid } from "uid";
 import db from "../firebase/firebaseInit.js";
 
@@ -241,6 +241,7 @@ export default {
     return {
       loading: null,
       invoice: {
+        docId: null,
         billerStreetAddress: "",
         billerCity: "",
         billerZipCode: null,
@@ -280,6 +281,7 @@ export default {
   },
   methods: {
     ...mapMutations(["toggleInvoice", "toggleModal", "toggleEditInvoice"]),
+    ...mapActions(["updateInvoice", "getInvoices"]),
     checkClick(event) {
       if (event.target == this.$refs.invoiceWrap) {
         this.toggleModal();
@@ -318,6 +320,11 @@ export default {
       this.invoice.invoiceDraft = true;
     },
     submitForm() {
+      if (this.editInvoice) {
+        this.updateInvoiceLocal();
+        return;
+      }
+
       this.uploadInvoice();
     },
     async uploadInvoice() {
@@ -340,6 +347,43 @@ export default {
       this.loading = false;
 
       this.toggleInvoice();
+      this.getInvoices();
+    },
+
+    async updateInvoiceLocal() {
+      this.loading = true;
+
+      this.calculateInvoiceTotal();
+
+      const dataBase = await db.collection("invoices").doc(this.invoice.docId);
+
+      await dataBase.update({
+        billerStreetAddress: this.invoice.billerStreetAddress,
+        billerCity: this.invoice.billerCity,
+        billerZipCode: this.invoice.billerZipCode,
+        billerCountry: this.invoice.billerCountry,
+        clientName: this.invoice.clientName,
+        clientEmail: this.invoice.clientEmail,
+        clientStreetAddress: this.invoice.clientStreetAddress,
+        clientCity: this.invoice.clientCity,
+        clientZipCode: this.invoice.clientZipCode,
+        clientCountry: this.invoice.clientCountry,
+        paymentTerms: this.invoice.paymentTerms,
+        paymentDueDate: this.invoice.paymentDueDate,
+        paymentDueDateUnix: this.invoice.paymentDueDateUnix,
+        productDescription: this.invoice.productDescription,
+        invoiceItemList: this.invoice.invoiceItemList,
+        invoiceTotal: this.invoice.invoiceTotal,
+      });
+
+      this.loading = false;
+
+      const data = {
+        docId: this.invoice.docId,
+        routeId: this.$route.params.invoiceId,
+      };
+
+      this.updateInvoice(data);
     },
   },
   computed: {
