@@ -20,6 +20,11 @@ export default createStore({
     setInvoiceData(state, payload) {
       state.invoiceData.push(payload);
     },
+    orderInvoicesByInvoiceNumber(state) {
+      state.invoiceData = state.invoiceData.sort(
+        (a, b) => b.invoiceId - a.invoiceId
+      );
+    },
     invoicesLoaded(state) {
       state.invoicesLoaded = true;
     },
@@ -63,11 +68,14 @@ export default createStore({
           const data = {
             docId: doc.id,
             invoiceId: doc.data().invoiceId,
-            billerStreetAddress: doc.data().billerStreetAddress,
-            billerCity: doc.data().billerCity,
-            billerZipCode: doc.data().billerZipCode,
-            billerCountry: doc.data().billerCountry,
+            sellerBulstat: doc.data().sellerBulstat,
+            sellerCompanyName: doc.data().sellerCompanyName,
+            sellerStreetAddress: doc.data().sellerStreetAddress,
+            sellerCity: doc.data().sellerCity,
+            sellerZipCode: doc.data().sellerZipCode,
+            sellerCountry: doc.data().sellerCountry,
             clientName: doc.data().clientName,
+            clientBulstat: doc.data().clientBulstat,
             clientEmail: doc.data().clientEmail,
             clientStreetAddress: doc.data().clientStreetAddress,
             clientCity: doc.data().clientCity,
@@ -78,7 +86,6 @@ export default createStore({
             paymentTerms: doc.data().paymentTerms,
             paymentDueDateUnix: doc.data().paymentDueDateUnix,
             paymentDueDate: doc.data().paymentDueDate,
-            productDescription: doc.data().productDescription,
             invoiceItemList: doc.data().invoiceItemList,
             invoiceTotal: doc.data().invoiceTotal,
             invoicePending: doc.data().invoicePending,
@@ -90,6 +97,7 @@ export default createStore({
         }
       });
 
+      commit("orderInvoicesByInvoiceNumber");
       commit("invoicesLoaded");
     },
     async updateInvoice({ commit, dispatch }, { docId, routeId }) {

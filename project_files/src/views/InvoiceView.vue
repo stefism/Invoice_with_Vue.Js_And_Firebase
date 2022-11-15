@@ -42,17 +42,25 @@
         </button>
       </div>
     </div>
-    <div class="invoice-details flex flex-column">
+    <div id="invoiceToExport" class="invoice-details flex flex-column">
       <div class="top flex">
         <div class="left flex flex-column">
-          <p><span>#</span>{{ currentInvoice.invoiceId }}</p>
-          <p>{{ currentInvoice.productDescription }}</p>
+          <p><span>Фактура № </span>{{ currentInvoice.invoiceId }}</p>
+          <p>
+            БУЛСТАТ: <b>{{ currentInvoice.sellerBulstat }}</b>
+          </p>
         </div>
         <div class="right flex flex-column">
-          <p>{{ currentInvoice.billerStreetAddress }}</p>
-          <p>{{ currentInvoice.billerCity }}</p>
-          <p>{{ currentInvoice.billerZipCode }}</p>
-          <p>{{ currentInvoice.billerCountry }}</p>
+          <p>
+            Фирма:
+            <b style="font-size: 16px">{{
+              currentInvoice.sellerCompanyName
+            }}</b>
+          </p>
+          <p>ул. № {{ currentInvoice.sellerStreetAddress }}</p>
+          <p>град: {{ currentInvoice.sellerCity }}</p>
+          <p>Пощенски код: {{ currentInvoice.sellerZipCode }}</p>
+          <p>Държава: {{ currentInvoice.sellerCountry }}</p>
         </div>
       </div>
       <div class="middle flex">
@@ -71,7 +79,10 @@
           <p>{{ currentInvoice.clientCountry }}</p>
         </div>
         <div class="send-to flex flex-column">
-          <h4>Изпрати до</h4>
+          <h4>Булстат на купувача</h4>
+          <p>{{ currentInvoice.clientBulstat }}</p>
+          <br />
+          <h4>Имейл</h4>
           <p>{{ currentInvoice.clientEmail }}</p>
         </div>
       </div>
@@ -98,6 +109,9 @@
           <p>Обща сума</p>
           <p>{{ currentInvoice.invoiceTotal }}</p>
         </div>
+        <button @click="generatePDF" class="green">
+          Експортирай като PDF файл
+        </button>
       </div>
     </div>
   </div>
@@ -105,10 +119,20 @@
 
 <script>
 import { mapActions, mapMutations, mapState } from "vuex";
+import html2canvas from "html2canvas";
+import jsPDF from "jspdf";
+
+import pdfMake from "pdfmake/build/pdfmake.js";
+import pdfFonts from "pdfmake/build/vfs_fonts.js";
+pdfMake.vfs = pdfFonts.pdfMake.vfs;
+
 export default {
   name: "invoiceView",
+  components: {},
   data() {
-    return {};
+    return {
+      test: ["fdfdfdf", "sdsdsdsd", "sdsdsdfr", "sdfdfdf"],
+    };
   },
   created() {
     this.setCurrentInvoice(this.$route.params.invoiceId);
@@ -137,6 +161,33 @@ export default {
     },
     updateStatusToPending(docId) {
       this.updateStatusToPendingToDb(docId);
+    },
+    makePDF() {
+      window.html2canvas = html2canvas;
+      const doc = new jsPDF({
+        orientation: "p",
+        unit: "mm",
+        format: "a4",
+        putOnlyUsedFonts: true,
+      });
+      doc.setFont("courier");
+      doc.getFontList();
+      doc.setFontSize(12);
+      doc.output("blob");
+      doc.setLanguage({ name: "bg" });
+      doc.setFillColor("black");
+
+      doc.html(document.getElementById("app"), {
+        callback: function (pdf) {
+          pdf.save("my_file.pdf");
+        },
+      });
+    },
+    pdf2() {
+      const documentCurr = document.getElementById("invoiceToExport");
+      const docDef = { content: documentCurr };
+      let pdf = pdfMake.createPdf(docDef);
+      pdf.open();
     },
   },
   computed: {

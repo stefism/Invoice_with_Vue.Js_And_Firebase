@@ -27,6 +27,12 @@
         </div>
       </div>
     </div>
+    <div style="margin-bottom: 20px">
+      <span style="margin-left: 20px; margin-right: 60px">Фактура номер</span
+      ><span style="margin-right: 100px">Падеж</span
+      ><span style="margin-right: 80px">Получател</span
+      ><span style="margin-right: 70px">Обща сума</span><span>Статус</span>
+    </div>
     <div v-if="invoiceData.length > 0">
       <Invoice
         v-for="(invoice, index) in filteredData"

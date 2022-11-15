@@ -14,41 +14,59 @@
         <h4>Продавач</h4>
 
         <div class="input flex flex-column">
-          <label for="billerStreetAddress">Адрес</label>
+          <label for="sellerCompanyName">Име на фирмата</label>
           <input
             required
             type="text"
-            id="billerStreetAddress"
-            v-model="invoice.billerStreetAddress"
+            id="sellerCompanyName"
+            v-model="invoice.sellerCompanyName"
+          />
+        </div>
+        <div class="input flex flex-column">
+          <label for="sellerBulstat">БУЛСТАТ</label>
+          <input
+            required
+            type="text"
+            id="sellerBulstat"
+            v-model="invoice.sellerBulstat"
+          />
+        </div>
+        <div class="input flex flex-column">
+          <label for="sellerStreetAddress">Адрес</label>
+          <input
+            required
+            type="text"
+            id="sellerStreetAddress"
+            v-model="invoice.sellerStreetAddress"
           />
         </div>
 
         <div class="location-details flex">
           <div class="input flex flex-column">
-            <label for="billerCity">Град</label>
+            <label for="sellerCity">Град</label>
             <input
               required
               type="text"
-              id="billerCity"
-              v-model="invoice.billerCity"
+              id="sellerCity"
+              v-model="invoice.sellerCity"
             />
           </div>
           <div class="input flex flex-column">
-            <label for="billerZipCode">Пощенски код</label>
+            <label for="sellerZipCode">Пощенски код</label>
             <input
               required
               type="text"
-              id="billerZipCode"
-              v-model="invoice.billerZipCode"
+              id="sellerZipCode"
+              v-model="invoice.sellerZipCode"
             />
           </div>
           <div class="input flex flex-column">
-            <label for="billerCountry">Държава</label>
+            <label for="sellerCountry">Държава</label>
             <input
               required
               type="text"
-              id="billerCountry"
-              v-model="invoice.billerCountry"
+              id="sellerCountry"
+              v-model="invoice.sellerCountry"
             />
           </div>
         </div>
@@ -64,6 +82,15 @@
             type="text"
             id="clientName"
             v-model="invoice.clientName"
+          />
+        </div>
+        <div class="input flex flex-column">
+          <label for="clientBulstat">Булстат</label>
+          <input
+            required
+            type="text"
+            id="clientBulstat"
+            v-model="invoice.clientBulstat"
           />
         </div>
         <div class="input flex flex-column">
@@ -146,15 +173,7 @@
             <option value="30">30 работни дни</option>
           </select>
         </div>
-        <div class="input flex flex-column">
-          <label for="productDescription">Описание на стоката</label>
-          <input
-            required
-            type="text"
-            id="productDescription"
-            v-model="invoice.productDescription"
-          />
-        </div>
+
         <div class="work-items">
           <h3>Артикули</h3>
           <table class="item-list">
@@ -242,11 +261,14 @@ export default {
       loading: null,
       invoice: {
         docId: null,
-        billerStreetAddress: "",
-        billerCity: "",
-        billerZipCode: null,
-        billerCountry: "",
+        sellerBulstat: "",
+        sellerCompanyName: "",
+        sellerStreetAddress: "",
+        sellerCity: "",
+        sellerZipCode: null,
+        sellerCountry: "",
         clientName: "",
+        clientBulstat: "",
         clientEmail: "",
         clientStreetAddress: "",
         clientCity: "",
@@ -257,7 +279,6 @@ export default {
         paymentTerms: null,
         paymentDueDateUnix: null,
         paymentDueDate: null,
-        productDescription: "",
         invoicePending: null,
         invoiceDraft: null,
         invoiceItemList: [],
@@ -334,15 +355,28 @@ export default {
 
       const dataBase = await db.collection("invoices").doc();
 
-      let newInvoice = {
-        invoiceId: uid(10),
-      };
+      let lastInvoiceIdNumber = [];
+      let newInvoice = {};
+
+      if (this.invoiceData.length > 0) {
+        lastInvoiceIdNumber = this.invoiceData;
+        lastInvoiceIdNumber = lastInvoiceIdNumber.sort(
+          (a, b) => b.invoiceId - a.invoiceId
+        )[0];
+
+        const newInvoiceNumber = lastInvoiceIdNumber.invoiceId + 1;
+        newInvoice = {
+          invoiceId: newInvoiceNumber,
+        };
+      } else {
+        newInvoice = {
+          invoiceId: 1000000001,
+        };
+      }
 
       for (const key in this.$data.invoice) {
         newInvoice[key] = this.$data.invoice[key];
       }
-
-      console.log(newInvoice);
 
       await dataBase.set(newInvoice);
 
@@ -360,11 +394,14 @@ export default {
       const dataBase = await db.collection("invoices").doc(this.invoice.docId);
 
       await dataBase.update({
-        billerStreetAddress: this.invoice.billerStreetAddress,
-        billerCity: this.invoice.billerCity,
-        billerZipCode: this.invoice.billerZipCode,
-        billerCountry: this.invoice.billerCountry,
+        sellerBulstat: this.invoice.sellerBulstat,
+        sellerCompanyName: this.invoice.sellerCompanyName,
+        sellerStreetAddress: this.invoice.sellerStreetAddress,
+        sellerCity: this.invoice.sellerCity,
+        sellerZipCode: this.invoice.sellerZipCode,
+        sellerCountry: this.invoice.sellerCountry,
         clientName: this.invoice.clientName,
+        clientBulstat: this.invoice.clientBulstat,
         clientEmail: this.invoice.clientEmail,
         clientStreetAddress: this.invoice.clientStreetAddress,
         clientCity: this.invoice.clientCity,
@@ -373,7 +410,6 @@ export default {
         paymentTerms: this.invoice.paymentTerms,
         paymentDueDate: this.invoice.paymentDueDate,
         paymentDueDateUnix: this.invoice.paymentDueDateUnix,
-        productDescription: this.invoice.productDescription,
         invoiceItemList: this.invoice.invoiceItemList,
         invoiceTotal: this.invoice.invoiceTotal,
       });
@@ -389,7 +425,7 @@ export default {
     },
   },
   computed: {
-    ...mapState(["editInvoice", "currentInvoice"]),
+    ...mapState(["editInvoice", "currentInvoice", "invoiceData"]),
   },
   watch: {
     "invoice.paymentTerms"() {
