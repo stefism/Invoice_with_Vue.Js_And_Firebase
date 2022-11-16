@@ -74,41 +74,97 @@
 
       <!-- Bill to -->
       <div class="bill-to flex flex-column">
-        <h4>Купувач</h4>
+        <div>
+          <span style="color: burlywood; margin-right: 180px">Купувач</span>
+          <button
+            class="purple contacts"
+            style="
+              width: 150px;
+              height: 20px;
+              align-self: end;
+              padding-top: 0px;
+            "
+            type="button"
+            @click="addNewContact"
+          >
+            {{ newContact ? "ОТКАЖИ" : "Добави купувач" }}
+          </button>
+          <button
+            :class="{ disabled: !isItemToEdit }"
+            class="purple contacts"
+            style="
+              width: 180px;
+              height: 20px;
+              align-self: end;
+              padding-top: 0px;
+            "
+            type="button"
+            @click="editContact"
+          >
+            {{ isContactEdit ? "ОТКАЖИ" : "Редактирай купувач" }}
+          </button>
+        </div>
         <div class="input flex flex-column">
           <label for="clientName">Име</label>
+          <select
+            v-if="!newContact && !isContactEdit && !editInvoice"
+            @change="onClientNameSelected"
+            name="clientName"
+            id="clientName"
+          >
+            <option value="">--Изберете име на купувач--</option>
+            <option
+              v-for="(contact, index) in contacts"
+              :key="index"
+              :value="contact.docId"
+            >
+              {{ contact.clientName }}
+            </option>
+          </select>
           <input
+            v-else-if="editInvoice"
+            :disabled="!newContact && !isContactEdit"
             required
             type="text"
             id="clientName"
-            v-model="invoice.clientName"
+            v-model="selectedContact.clientName"
+          />
+          <input
+            v-else
+            required
+            type="text"
+            id="clientName"
+            v-model="selectedContact.clientName"
           />
         </div>
         <div class="input flex flex-column">
           <label for="clientBulstat">Булстат</label>
           <input
+            :disabled="!newContact && !isContactEdit"
             required
             type="text"
             id="clientBulstat"
-            v-model="invoice.clientBulstat"
+            v-model="selectedContact.clientBulstat"
           />
         </div>
         <div class="input flex flex-column">
           <label for="clientEmail">И-мейл</label>
           <input
+            :disabled="!newContact && !isContactEdit"
             required
             type="text"
             id="clientEmail"
-            v-model="invoice.clientEmail"
+            v-model="selectedContact.clientEmail"
           />
         </div>
         <div class="input flex flex-column">
           <label for="clientStreetAddress">Адрес</label>
           <input
+            :disabled="!newContact && !isContactEdit"
             required
             type="text"
             id="clientStreetAddress"
-            v-model="invoice.clientStreetAddress"
+            v-model="selectedContact.clientStreetAddress"
           />
         </div>
 
@@ -116,28 +172,31 @@
           <div class="input flex flex-column">
             <label for="clientCity">Град</label>
             <input
+              :disabled="!newContact && !isContactEdit"
               required
               type="text"
               id="clientCity"
-              v-model="invoice.clientCity"
+              v-model="selectedContact.clientCity"
             />
           </div>
           <div class="input flex flex-column">
             <label for="clientZipCode">Пощенски код</label>
             <input
+              :disabled="!newContact && !isContactEdit"
               required
               type="text"
               id="clientZipCode"
-              v-model="invoice.clientZipCode"
+              v-model="selectedContact.clientZipCode"
             />
           </div>
           <div class="input flex flex-column">
             <label for="clientCountry">Държава</label>
             <input
+              :disabled="!newContact && !isContactEdit"
               required
               type="text"
               id="clientCountry"
-              v-model="invoice.clientCountry"
+              v-model="selectedContact.clientCountry"
             />
           </div>
         </div>
@@ -284,6 +343,9 @@ export default {
         invoiceItemList: [],
         invoiceTotal: 0,
       },
+      selectedContact: {},
+      newContact: false,
+      isContactEdit: false,
     };
   },
   created() {
@@ -298,11 +360,42 @@ export default {
       for (const key in this.currentInvoice) {
         this.invoice[key] = this.currentInvoice[key];
       }
+      this.selectedContact.clientBulstat = this.currentInvoice.clientBulstat;
+      this.selectedContact.clientCity = this.currentInvoice.clientCity;
+      this.selectedContact.clientCountry = this.currentInvoice.clientCountry;
+      this.selectedContact.clientEmail = this.currentInvoice.clientEmail;
+      this.selectedContact.clientName = this.currentInvoice.clientName;
+      this.selectedContact.clientStreetAddress =
+        this.currentInvoice.clientStreetAddress;
+      this.selectedContact.clientZipCode = this.currentInvoice.clientZipCode;
+      this.selectedContact.docId = this.currentInvoice.docId;
     }
   },
   methods: {
     ...mapMutations(["toggleInvoice", "toggleModal", "toggleEditInvoice"]),
     ...mapActions(["updateInvoice", "getInvoices"]),
+    addNewContact() {
+      this.newContact = !this.newContact;
+      this.selectedContact = {};
+    },
+    editContact() {
+      this.isContactEdit = !this.isContactEdit;
+
+      if (!this.isContactEdit) {
+        this.selectedContact = {};
+      }
+    },
+    onClientNameSelected(e) {
+      const selectedContactId = e.target.value;
+
+      this.selectedContact = JSON.parse(
+        JSON.stringify(this.contacts.find((c) => c.docId == selectedContactId))
+      );
+
+      if (!this.selectedContact) {
+        this.selectedContact = {};
+      }
+    },
     checkClick(event) {
       if (event.target == this.$refs.invoiceWrap) {
         this.toggleModal();
@@ -354,6 +447,39 @@ export default {
       this.calculateInvoiceTotal();
 
       const dataBase = await db.collection("invoices").doc();
+
+      if (this.newContact) {
+        const contacts = await db.collection("contacts").doc();
+
+        const newContact = {
+          id: uid(10),
+          clientName: this.selectedContact.clientName,
+          clientBulstat: this.selectedContact.clientBulstat,
+          clientCity: this.selectedContact.clientCity,
+          clientCountry: this.selectedContact.clientCountry,
+          clientStreetAddress: this.selectedContact.clientStreetAddress,
+          clientEmail: this.selectedContact.clientEmail,
+          clientZipCode: this.selectedContact.clientZipCode,
+        };
+
+        await contacts.set(newContact);
+      }
+
+      if (this.isContactEdit) {
+        const currContact = await db
+          .collection("contacts")
+          .doc(this.selectedContact.docId);
+
+        await currContact.update({
+          clientName: this.invoice.clientName,
+          clientBulstat: this.invoice.clientBulstat,
+          clientEmail: this.invoice.clientEmail,
+          clientStreetAddress: this.invoice.clientStreetAddress,
+          clientCity: this.invoice.clientCity,
+          clientZipCode: this.invoice.clientZipCode,
+          clientCountry: this.invoice.clientCountry,
+        });
+      }
 
       let lastInvoiceIdNumber = [];
       let newInvoice = {};
@@ -425,7 +551,14 @@ export default {
     },
   },
   computed: {
-    ...mapState(["editInvoice", "currentInvoice", "invoiceData"]),
+    ...mapState(["editInvoice", "currentInvoice", "invoiceData", "contacts"]),
+    isItemToEdit() {
+      if (this.selectedContact && this.selectedContact.docId != undefined) {
+        return true;
+      } else {
+        return false;
+      }
+    },
   },
   watch: {
     "invoice.paymentTerms"() {
@@ -442,6 +575,9 @@ export default {
 </script>
 
 <style lang="scss" scoped>
+.contacts:hover {
+  background-color: cadetblue;
+}
 .invoice-wrap {
   position: fixed;
   top: 0;

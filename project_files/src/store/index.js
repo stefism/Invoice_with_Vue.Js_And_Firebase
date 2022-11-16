@@ -4,9 +4,11 @@ import db from "../firebase/firebaseInit";
 export default createStore({
   state: {
     invoiceData: [],
+    contacts: [],
     invoiceModal: null,
     modalActive: null,
     invoicesLoaded: null,
+    contactsLoaded: null,
     currentInvoice: null,
     editInvoice: null,
   },
@@ -20,6 +22,9 @@ export default createStore({
     setInvoiceData(state, payload) {
       state.invoiceData.push(payload);
     },
+    setContact(state, payload) {
+      state.contacts.push(payload);
+    },
     orderInvoicesByInvoiceNumber(state) {
       state.invoiceData = state.invoiceData.sort(
         (a, b) => b.invoiceId - a.invoiceId
@@ -27,6 +32,9 @@ export default createStore({
     },
     invoicesLoaded(state) {
       state.invoicesLoaded = true;
+    },
+    contactsLoaded(state) {
+      state.contactsLoaded = true;
     },
     setCurrentInvoice(state, currInvoiceId) {
       state.currentInvoice = state.invoiceData.find(
@@ -96,9 +104,30 @@ export default createStore({
           commit("setInvoiceData", data);
         }
       });
-
-      commit("orderInvoicesByInvoiceNumber");
       commit("invoicesLoaded");
+    },
+    async getContacts({ commit, state }) {
+      const getContacts = db.collection("contacts");
+      const result = await getContacts.get();
+
+      result.forEach((doc) => {
+        if (!state.contacts.some((c) => c.docId == doc.id)) {
+          const data = {
+            docId: doc.id,
+            clientName: doc.data().clientName,
+            clientBulstat: doc.data().clientBulstat,
+            clientEmail: doc.data().clientEmail,
+            clientStreetAddress: doc.data().clientStreetAddress,
+            clientCity: doc.data().clientCity,
+            clientZipCode: doc.data().clientZipCode,
+            clientCountry: doc.data().clientCountry,
+          };
+
+          commit("setContact", data);
+        }
+      });
+
+      commit("contactsLoaded");
     },
     async updateInvoice({ commit, dispatch }, { docId, routeId }) {
       commit("deleteInvoice", docId);

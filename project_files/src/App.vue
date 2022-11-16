@@ -33,11 +33,12 @@ export default {
   components: { Navigation, InvoiceModal, Modal },
   created() {
     this.getInvoices();
+    this.getContacts();
     this.checkScreen();
     window.addEventListener("resize", this.checkScreen);
   },
   methods: {
-    ...mapActions(["getInvoices"]),
+    ...mapActions(["getInvoices", "getContacts"]),
     checkScreen() {
       if (window.innerWidth <= 750) {
         this.mobile = true;
